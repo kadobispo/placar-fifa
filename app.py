@@ -13,13 +13,12 @@ st.set_page_config(page_title="Placar FIFA", page_icon="🎮", layout="centered"
 
 DATA_FILE = "historico_fifa.csv"
 
-# Função para converter a imagem de fundo em formato Base64
 def obter_base64_da_imagem(caminho_da_imagem):
     with open(caminho_da_imagem, "rb") as f:
         dados = f.read()
     return base64.b64encode(dados).decode()
 
-# Aplica a imagem do campo de futebol no fundo e corrige o layout do celular
+# Aplica a imagem do campo de futebol no fundo e corrige as fotos e o celular
 if os.path.exists("campo_futebol.jpg"):
     img_base64 = obter_base64_da_imagem("campo_futebol.jpg")
     st.markdown(
@@ -27,7 +26,7 @@ if os.path.exists("campo_futebol.jpg"):
         <style>
         /* Fundo do campo de futebol */
         [data-testid="stAppViewContainer"] {{
-            background-image: linear-gradient(rgba(0, 0, 0, 0.80), rgba(0, 0, 0, 0.80)), url("data:image/jpeg;base64,{img_base64}");
+            background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url("data:image/jpeg;base64,{img_base64}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -41,24 +40,39 @@ if os.path.exists("campo_futebol.jpg"):
         }}
         
         /* ==========================================
-           MÁGICA PARA O CELULAR (MOBILE FIX)
+           MÁGICA PARA AS FOTOS (Deixa redonda e centralizada)
+           ========================================== */
+        div[data-testid="stImage"] {{
+            display: flex;
+            justify-content: center;
+        }}
+        div[data-testid="stImage"] img {{
+            max-width: 140px !important; /* Tamanho perfeito para a tela */
+            border-radius: 50% !important; /* Deixa a foto perfeitamente redonda */
+            border: 3px solid #ffffff; /* Borda branca para destacar no fundo escuro */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5); /* Sombra para dar profundidade */
+        }}
+
+        /* ==========================================
+           MÁGICA PARA O CELULAR (Impede de estourar)
            ========================================== */
         @media (max-width: 768px) {{
-            /* Força as colunas a ficarem lado a lado e NUNCA empilharem */
             div[data-testid="stHorizontalBlock"] {{
                 flex-direction: row !important;
                 flex-wrap: nowrap !important;
             }}
-            /* Define que cada lado (Ricardo e Dinho) ocupa exatamente 50% da tela */
             div[data-testid="column"] {{
                 width: 50% !important;
                 flex: 1 1 50% !important;
                 min-width: 50% !important;
                 padding: 0 5px !important;
             }}
-            /* Reduz um pouco o tamanho das letras no celular para caber perfeitamente */
             h3 {{
                 font-size: 1.1rem !important;
+            }}
+            /* No celular, a foto fica um pouquinho menor para caber perfeito */
+            div[data-testid="stImage"] img {{
+                max-width: 100px !important; 
             }}
         }}
         </style>
@@ -66,7 +80,6 @@ if os.path.exists("campo_futebol.jpg"):
         unsafe_allow_html=True
     )
 
-# Função para carregar a base de dados
 def load_data():
     if os.path.exists(DATA_FILE):
         df_carregado = pd.read_csv(DATA_FILE)
@@ -77,7 +90,6 @@ def load_data():
 
 df = load_data()
 
-# Função para deixar as fotos quadradas e do mesmo tamanho
 def obter_foto_padronizada(caminho):
     try:
         img = Image.open(caminho)
@@ -101,10 +113,7 @@ aba1, aba2 = st.tabs(["📝 Registrar Placar", "📊 Resultados do Mês"])
 with aba1:
     st.subheader("Como foi o jogo hoje?")
     
-    # Calendário no formato Dia/Mês/Ano
     hoje = st.date_input("Data do jogo", date.today(), format="DD/MM/YYYY")
-    
-    # Transforma a data em texto para pesquisa e gravação
     data_selecionada_str = hoje.strftime("%d/%m/%Y")
     
     jogo_existente = df[df["Data"] == data_selecionada_str]
@@ -124,26 +133,23 @@ with aba1:
     
     # --- Lado do Ricardo ---
     with col1:
-        c1, c2, c3 = st.columns([1, 2, 1])
-        with c2:
-            foto_ricardo = obter_foto_padronizada("foto_ricardo.png")
-            if foto_ricardo:
-                st.image(foto_ricardo, use_container_width=True)
-            else:
-                st.markdown("<h1 style='text-align: center;'>👨🏻</h1>", unsafe_allow_html=True)
+        # Repare que retiramos as subcolunas, o CSS agora centraliza sozinho!
+        foto_ricardo = obter_foto_padronizada("foto_ricardo.png")
+        if foto_ricardo:
+            st.image(foto_ricardo, use_container_width=True)
+        else:
+            st.markdown("<h1 style='text-align: center;'>👨🏻</h1>", unsafe_allow_html=True)
                 
         st.markdown("<h3 style='text-align: center;'>Ricardo</h3>", unsafe_allow_html=True)
         vit_ricardo = st.number_input("Suas Vitórias", min_value=0, step=1, value=val_ricardo, key="input_ricardo")
         
     # --- Lado do Dinho ---
     with col2:
-        c4, c5, c6 = st.columns([1, 2, 1])
-        with c5:
-            foto_dinho = obter_foto_padronizada("foto_dinho.png")
-            if foto_dinho:
-                st.image(foto_dinho, use_container_width=True)
-            else:
-                st.markdown("<h1 style='text-align: center;'>👴🏼</h1>", unsafe_allow_html=True)
+        foto_dinho = obter_foto_padronizada("foto_dinho.png")
+        if foto_dinho:
+            st.image(foto_dinho, use_container_width=True)
+        else:
+            st.markdown("<h1 style='text-align: center;'>👴🏼</h1>", unsafe_allow_html=True)
                 
         st.markdown("<h3 style='text-align: center;'>Dinho</h3>", unsafe_allow_html=True)
         vit_dinho = st.number_input("Vitórias dele", min_value=0, step=1, value=val_dinho, key="input_dinho")
