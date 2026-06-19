@@ -19,14 +19,15 @@ def obter_base64_da_imagem(caminho_da_imagem):
         dados = f.read()
     return base64.b64encode(dados).decode()
 
-# Aplica a imagem do campo de futebol no fundo
+# Aplica a imagem do campo de futebol no fundo e corrige o layout do celular
 if os.path.exists("campo_futebol.jpg"):
     img_base64 = obter_base64_da_imagem("campo_futebol.jpg")
     st.markdown(
         f"""
         <style>
+        /* Fundo do campo de futebol */
         [data-testid="stAppViewContainer"] {{
-            background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url("data:image/jpeg;base64,{img_base64}");
+            background-image: linear-gradient(rgba(0, 0, 0, 0.80), rgba(0, 0, 0, 0.80)), url("data:image/jpeg;base64,{img_base64}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -38,6 +39,28 @@ if os.path.exists("campo_futebol.jpg"):
         h1, h2, h3, p, label, .stMarkdown {{
             color: #ffffff !important;
         }}
+        
+        /* ==========================================
+           MÁGICA PARA O CELULAR (MOBILE FIX)
+           ========================================== */
+        @media (max-width: 768px) {{
+            /* Força as colunas a ficarem lado a lado e NUNCA empilharem */
+            div[data-testid="stHorizontalBlock"] {{
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+            }}
+            /* Define que cada lado (Ricardo e Dinho) ocupa exatamente 50% da tela */
+            div[data-testid="column"] {{
+                width: 50% !important;
+                flex: 1 1 50% !important;
+                min-width: 50% !important;
+                padding: 0 5px !important;
+            }}
+            /* Reduz um pouco o tamanho das letras no celular para caber perfeitamente */
+            h3 {{
+                font-size: 1.1rem !important;
+            }}
+        }}
         </style>
         """,
         unsafe_allow_html=True
@@ -47,7 +70,7 @@ if os.path.exists("campo_futebol.jpg"):
 def load_data():
     if os.path.exists(DATA_FILE):
         df_carregado = pd.read_csv(DATA_FILE)
-        df_carregado["Data"] = df_carregado["Data"].astype(str) # Garante o formato de texto para as datas
+        df_carregado["Data"] = df_carregado["Data"].astype(str)
         return df_carregado
     else:
         return pd.DataFrame(columns=["Data", "Ricardo", "Dinho", "Vencedor"])
@@ -70,33 +93,31 @@ st.markdown("<h1 style='text-align: center;'>🎮 Confronto FIFA 🎮</h1>", uns
 st.markdown("<h3 style='text-align: center; color: #b0b0b0;'>Ricardo vs Dinho</h3>", unsafe_allow_html=True)
 st.divider()
 
-aba1, aba2 = st.tabs(["📝 Registar Placar", "📊 Resultados do Mês"])
+aba1, aba2 = st.tabs(["📝 Registrar Placar", "📊 Resultados do Mês"])
 
 # ==========================================
-# 3. ABA 1: REGISTAR / CONSULTAR PLACAR
+# 3. ABA 1: REGISTRAR / CONSULTAR PLACAR
 # ==========================================
 with aba1:
     st.subheader("Como foi o jogo hoje?")
     
-    # AJUSTE: Exibe o calendário no formato Dia/Mês/Ano
+    # Calendário no formato Dia/Mês/Ano
     hoje = st.date_input("Data do jogo", date.today(), format="DD/MM/YYYY")
     
-    # AJUSTE: Transforma a data em texto no formato Dia/Mês/Ano para pesquisa e gravação
+    # Transforma a data em texto para pesquisa e gravação
     data_selecionada_str = hoje.strftime("%d/%m/%Y")
     
     jogo_existente = df[df["Data"] == data_selecionada_str]
     
-    # Valores padrão iniciais (zerados)
     val_ricardo = 0
     val_dinho = 0
     ja_existe_jogo = False
     
-    # Se encontrar um jogo nesta data, recupera o placar antigo
     if not jogo_existente.empty:
         val_ricardo = int(jogo_existente.iloc[0]["Ricardo"])
         val_dinho = int(jogo_existente.iloc[0]["Dinho"])
         vencedor_salvo = jogo_existente.iloc[0]["Vencedor"]
-        st.info(f"ℹ️ Já existe um jogo registado nesta data! Placar: **Ricardo {val_ricardo} x {val_dinho} Dinho** (Vencedor: {vencedor_salvo})")
+        st.info(f"ℹ️ Já existe um jogo registrado nesta data! Placar: **Ricardo {val_ricardo} x {val_dinho} Dinho** (Vencedor: {vencedor_salvo})")
         ja_existe_jogo = True
     
     col1, col2 = st.columns(2)
@@ -112,7 +133,7 @@ with aba1:
                 st.markdown("<h1 style='text-align: center;'>👨🏻</h1>", unsafe_allow_html=True)
                 
         st.markdown("<h3 style='text-align: center;'>Ricardo</h3>", unsafe_allow_html=True)
-        vit_ricardo = st.number_input("As Suas Vitórias", min_value=0, step=1, value=val_ricardo, key="input_ricardo")
+        vit_ricardo = st.number_input("Suas Vitórias", min_value=0, step=1, value=val_ricardo, key="input_ricardo")
         
     # --- Lado do Dinho ---
     with col2:
@@ -129,16 +150,15 @@ with aba1:
 
     st.write("") 
     
-    # Muda o texto do botão caso seja uma edição de data antiga
-    texto_botao = "🔄 Atualizar Resultado do Dia" if ja_existe_jogo else "💾 Guardar Resultado de Hoje"
+    texto_botao = "🔄 Atualizar Resultado do Dia" if ja_existe_jogo else "💾 Gravar Resultado de Hoje"
     
     if st.button(texto_botao, use_container_width=True, type="primary"):
         if vit_ricardo > vit_dinho:
             vencedor = "Ricardo"
-            st.balloons() # Festa para o Ricardo!
+            st.balloons() 
         elif vit_dinho > vit_ricardo:
             vencedor = "Dinho"
-            st.balloons() # Festa para o Dinho! 🎉
+            st.balloons() 
         else:
             vencedor = "Empate"
             
@@ -149,20 +169,19 @@ with aba1:
             "Vencedor": [vencedor]
         })
         
-        # Se já existia um jogo nessa data, removemos o antigo antes de guardar o novo
         if ja_existe_jogo:
             df = df[df["Data"] != data_selecionada_str]
             
         df = pd.concat([df, novo_dado], ignore_index=True)
         df.to_csv(DATA_FILE, index=False)
-        st.success(f"Feito! Placar guardado com sucesso. Vencedor: **{vencedor}** 🏆")
+        st.success(f"Feito! Placar gravado com sucesso. Vencedor: **{vencedor}** 🏆")
 
 # ==========================================
-# 4. ABA 2: VER QUEM ESTÁ A GANHAR NO MÊS
+# 4. ABA 2: VER QUEM ESTÁ GANHANDO NO MÊS
 # ==========================================
 with aba2:
     if not df.empty:
-        st.subheader("Quem manda no Videogame?")
+        st.subheader("Quem manda no videogame?")
         
         vitorias_dias = df[df["Vencedor"] != "Empate"]["Vencedor"].value_counts()
         ricardo_dias = vitorias_dias.get("Ricardo", 0)
@@ -197,8 +216,7 @@ with aba2:
         st.altair_chart(grafico, use_container_width=True)
         
         with st.expander("Ver histórico completo das partidas"):
-            # Exibe a tabela com as datas organizadas em Dia/Mês/Ano
             st.dataframe(df, use_container_width=True, hide_index=True)
             
     else:
-        st.info("Ainda não há nada aqui. Liguem o Videogame!")
+        st.info("Ainda não há nada aqui. Liguem o videogame!")
