@@ -13,7 +13,7 @@ st.set_page_config(page_title="Placar FIFA", page_icon="🎮", layout="centered"
 
 # ⚠️ ATENÇÃO: Substitua o link abaixo pelo LINK DE EDIÇÃO da sua planilha do Google!
 # Certifique-se de que nas configurações de compartilhamento da planilha está como "Qualquer pessoa com o link pode editar"
-URL_DA_PLANILHA = "https://docs.google.com/spreadsheets/d/18xnRj6LmMJlik7zRqBuIiG0GHwWFF6x1ecL75LQEsUk/edit"
+URL_DA_PLANILHA = "https://docs.google.com/spreadsheets/d/SEU_LINK_AQUI/edit"
 
 # Função para conectar ao Google Sheets usando o link público de edição
 @st.cache_data(ttl=5) # Atualiza os dados a cada 5 segundos
