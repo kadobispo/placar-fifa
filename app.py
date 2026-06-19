@@ -21,7 +21,7 @@ def obter_base64_da_imagem(caminho_da_imagem):
     except:
         return None
 
-# Aplica a imagem do campo de futebol no fundo e FORÇA o 50/50 no celular
+# Aplica a imagem do campo de futebol no fundo e ESPREME a caixa de vitória
 img_base64_fundo = obter_base64_da_imagem("campo_futebol.jpg")
 if img_base64_fundo:
     st.markdown(
@@ -42,27 +42,52 @@ if img_base64_fundo:
             color: #ffffff !important;
         }}
         
+        /* Mágica padrão para as fotos */
+        img.avatar-img {{
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 3px solid white;
+            object-fit: cover;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }}
+        
         /* ==========================================
-           MÁGICA PARA O CELULAR (Trava o 50/50 exato)
+           MÁGICA PARA O CELULAR (Esmaga a caixa de números)
            ========================================== */
         @media (max-width: 768px) {{
             div[data-testid="stHorizontalBlock"] {{
                 display: flex !important;
                 flex-direction: row !important;
                 flex-wrap: nowrap !important;
-                gap: 10px !important; /* Espaçamento seguro entre as duas colunas */
-                padding: 0 !important;
+                gap: 8px !important; 
+                padding: 0 5px !important;
+                overflow: hidden !important; /* Corta qualquer coisa que tentar vazar */
             }}
             div[data-testid="column"] {{
-                flex: 1 1 0px !important; /* A MAGIA: Força a divisão igual ignorando o tamanho da caixa */
+                flex: 1 1 0% !important; /* O zero força a divisão 50/50 exata */
                 width: 50% !important;
-                max-width: 50% !important;
-                min-width: 0 !important;
+                min-width: 0 !important; /* Permite espremer a coluna */
             }}
+            
+            /* O VERDADEIRO VILÃO: A caixa de números e seus botões internos */
+            div[data-testid="stNumberInput"],
+            div[data-baseweb="input"],
+            div[data-baseweb="base-input"] {{
+                min-width: 0 !important; /* Remove a trava de tamanho mínimo da caixa */
+                width: 100% !important;
+            }}
+            
+            /* Diminui o texto das caixas para caber lado a lado sem quebrar */
+            label[data-testid="stWidgetLabel"] p {{
+                font-size: 13px !important;
+            }}
+            
             /* Diminui a foto um pouco no celular para dar respiro na tela */
             img.avatar-img {{
-                width: 85px !important;
-                height: 85px !important;
+                width: 80px !important;
+                height: 80px !important;
             }}
         }}
         </style>
@@ -77,7 +102,7 @@ def renderizar_avatar(caminho_imagem, emoji, nome):
         st.markdown(
             f"""
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
-                <img class="avatar-img" src="data:image/png;base64,{img_b64}" style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.5); margin-bottom: 10px;">
+                <img class="avatar-img" src="data:image/png;base64,{img_b64}">
                 <h3 style="margin: 0; text-align: center; color: white;">{nome}</h3>
             </div>
             """, unsafe_allow_html=True
@@ -134,7 +159,7 @@ with aba1:
         st.info(f"ℹ️ Já existe um jogo registrado nesta data! Placar: **Ricardo {val_ricardo} x {val_dinho} Dinho** (Vencedor: {vencedor_salvo})")
         ja_existe_jogo = True
     
-    # Criamos apenas as duas colunas
+    # Colunas limpas lado a lado
     col1, col2 = st.columns(2)
     
     # --- Lado do Ricardo ---
