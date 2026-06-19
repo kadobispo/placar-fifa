@@ -4,7 +4,6 @@ import os
 import base64
 import altair as alt
 from datetime import date
-from PIL import Image, ImageOps
 
 # ==========================================
 # 1. CONFIGURAÇÃO INICIAL E ESTILOS (CSS)
@@ -13,20 +12,24 @@ st.set_page_config(page_title="Placar FIFA", page_icon="🎮", layout="centered"
 
 DATA_FILE = "historico_fifa.csv"
 
+# Função para converter a imagem em formato Base64 (agora usada para o fundo e para os avatares!)
 def obter_base64_da_imagem(caminho_da_imagem):
-    with open(caminho_da_imagem, "rb") as f:
-        dados = f.read()
-    return base64.b64encode(dados).decode()
+    try:
+        with open(caminho_da_imagem, "rb") as f:
+            dados = f.read()
+        return base64.b64encode(dados).decode()
+    except:
+        return None
 
-# Aplica a imagem do campo de futebol no fundo e corrige as fotos e o celular
-if os.path.exists("campo_futebol.jpg"):
-    img_base64 = obter_base64_da_imagem("campo_futebol.jpg")
+# Aplica a imagem do campo de futebol no fundo e corrige as colunas do celular
+img_base64_fundo = obter_base64_da_imagem("campo_futebol.jpg")
+if img_base64_fundo:
     st.markdown(
         f"""
         <style>
         /* Fundo do campo de futebol */
         [data-testid="stAppViewContainer"] {{
-            background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url("data:image/jpeg;base64,{img_base64}");
+            background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url("data:image/jpeg;base64,{img_base64_fundo}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -40,47 +43,19 @@ if os.path.exists("campo_futebol.jpg"):
         }}
         
         /* ==========================================
-           MÁGICA PARA AS FOTOS (Deixa redonda e centralizada)
-           ========================================== */
-        div[data-testid="stImage"] {{
-            display: flex;
-            justify-content: center;
-            width: 100%;
-        }}
-        div[data-testid="stImage"] img {{
-            max-width: 140px !important; 
-            border-radius: 50% !important; 
-            border: 3px solid #ffffff; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5); 
-        }}
-
-        /* ==========================================
-           MÁGICA PARA O CELULAR (Impede de empurrar para o lado)
+           MÁGICA PARA O CELULAR (Força o lado a lado perfeito)
            ========================================== */
         @media (max-width: 768px) {{
             div[data-testid="stHorizontalBlock"] {{
                 flex-direction: row !important;
                 flex-wrap: nowrap !important;
-                gap: 0px !important; /* Tira o espaço extra que empurrava o Dinho */
-                justify-content: space-evenly !important;
+                gap: 15px !important; /* Espaço exato entre você e o Dinho */
+                padding: 0 10px !important;
             }}
             div[data-testid="column"] {{
-                width: 48% !important; /* Deixa um respiro de segurança */
-                flex: 1 1 48% !important;
-                min-width: 0 !important; /* Permite encolher sem vazar a tela */
-                padding: 0 5px !important;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }}
-            h3 {{
-                font-size: 1.1rem !important;
-                text-align: center !important;
-                width: 100%;
-            }}
-            /* A foto fica um pouquinho menor para caber perfeito lado a lado */
-            div[data-testid="stImage"] img {{
-                max-width: 90px !important; 
+                width: 50% !important;
+                flex: 1 1 50% !important;
+                min-width: 0 !important;
             }}
         }}
         </style>
@@ -88,6 +63,31 @@ if os.path.exists("campo_futebol.jpg"):
         unsafe_allow_html=True
     )
 
+# Função para desenhar o rosto de vocês perfeitamente centralizado em HTML
+def renderizar_avatar(caminho_imagem, emoji, nome):
+    img_b64 = obter_base64_da_imagem(caminho_imagem)
+    if img_b64:
+        # Se achar a foto, desenha a imagem redonda
+        st.markdown(
+            f"""
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+                <img src="data:image/png;base64,{img_b64}" style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.5); margin-bottom: 10px;">
+                <h3 style="margin: 0; text-align: center; color: white;">{nome}</h3>
+            </div>
+            """, unsafe_allow_html=True
+        )
+    else:
+        # Se não achar a foto, desenha o emoji
+        st.markdown(
+            f"""
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+                <div style="font-size: 80px; line-height: 1.2;">{emoji}</div>
+                <h3 style="margin: 0; text-align: center; color: white;">{nome}</h3>
+            </div>
+            """, unsafe_allow_html=True
+        )
+
+# Função para carregar a base de dados
 def load_data():
     if os.path.exists(DATA_FILE):
         df_carregado = pd.read_csv(DATA_FILE)
@@ -97,14 +97,6 @@ def load_data():
         return pd.DataFrame(columns=["Data", "Ricardo", "Dinho", "Vencedor"])
 
 df = load_data()
-
-def obter_foto_padronizada(caminho):
-    try:
-        img = Image.open(caminho)
-        img_redimensionada = ImageOps.fit(img, (300, 300), Image.Resampling.LANCZOS)
-        return img_redimensionada
-    except:
-        return None
 
 # ==========================================
 # 2. CABEÇALHO DA APLICAÇÃO
@@ -137,28 +129,19 @@ with aba1:
         st.info(f"ℹ️ Já existe um jogo registrado nesta data! Placar: **Ricardo {val_ricardo} x {val_dinho} Dinho** (Vencedor: {vencedor_salvo})")
         ja_existe_jogo = True
     
+    # Criamos apenas as duas colunas limpas
     col1, col2 = st.columns(2)
     
     # --- Lado do Ricardo ---
     with col1:
-        foto_ricardo = obter_foto_padronizada("foto_ricardo.png")
-        if foto_ricardo:
-            st.image(foto_ricardo, use_container_width=True)
-        else:
-            st.markdown("<h1 style='text-align: center;'>👨🏻</h1>", unsafe_allow_html=True)
-                
-        st.markdown("<h3 style='text-align: center;'>Ricardo</h3>", unsafe_allow_html=True)
+        renderizar_avatar("foto_ricardo.png", "👨🏻", "Ricardo")
+        st.write("") # Espaço extra
         vit_ricardo = st.number_input("Suas Vitórias", min_value=0, step=1, value=val_ricardo, key="input_ricardo")
         
     # --- Lado do Dinho ---
     with col2:
-        foto_dinho = obter_foto_padronizada("foto_dinho.png")
-        if foto_dinho:
-            st.image(foto_dinho, use_container_width=True)
-        else:
-            st.markdown("<h1 style='text-align: center;'>👴🏼</h1>", unsafe_allow_html=True)
-                
-        st.markdown("<h3 style='text-align: center;'>Dinho</h3>", unsafe_allow_html=True)
+        renderizar_avatar("foto_dinho.png", "👴🏼", "Dinho")
+        st.write("") # Espaço extra
         vit_dinho = st.number_input("Vitórias dele", min_value=0, step=1, value=val_dinho, key="input_dinho")
 
     st.write("") 
