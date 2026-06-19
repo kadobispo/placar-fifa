@@ -38,54 +38,29 @@ if img_base64_fundo:
         [data-testid="stHeader"] {{
             background: rgba(0,0,0,0);
         }}
-        h1, h2, h3, p, label, .stMarkdown {{
+        h1, h2, h3, h4, p, label, .stMarkdown {{
             color: #ffffff !important;
         }}
         
-        /* ==========================================
-           A OPÇÃO NUCLEAR PARA O TELEMÓVEL (CSS com Especificidade Máxima)
-           ========================================== */
-        html body div[data-testid="stHorizontalBlock"] {{
-            display: flex !important;
-            flex-direction: row !important; /* FORÇA LADO A LADO */
-            flex-wrap: nowrap !important;   /* PROÍBE EMPILHAR */
-            gap: 15px !important;           /* ESPAÇO NO MEIO */
-            padding: 0 5px !important;
-        }}
-        
-        html body div[data-testid="column"] {{
-            width: 50% !important;          /* 50% EXATO PARA CADA UM */
-            flex: 1 1 50% !important;
-            min-width: 0 !important;        /* PERMITE ENCOLHER */
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-        }}
-        
-        /* Força a caixa de números a caber nos 50% */
-        html body div[data-testid="stNumberInput"] {{
-            min-width: 0 !important;
-            width: 100% !important;
-        }}
-        
-        /* Ajuste fino dos botões de - e + para não ficarem escondidos */
-        html body div[data-baseweb="input"] {{
-            font-size: 14px !important;
+        /* Centraliza a caixa de números (os botões de - e +) no meio da tela */
+        div[data-testid="stNumberInput"] {{
+            max-width: 250px; /* Impede que a caixa fique gigante de uma ponta a outra */
+            margin: 0 auto !important; /* Centraliza perfeitamente */
         }}
         </style>
         """,
         unsafe_allow_html=True
     )
 
-# Função para desenhar os avatares (tamanho ajustado para caber perfeito no telemóvel)
+# Função para desenhar os avatares (tamanho mantido como pediu)
 def renderizar_avatar(caminho_imagem, emoji, nome):
     img_b64 = obter_base64_da_imagem(caminho_imagem)
     if img_b64:
         st.markdown(
             f"""
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
-                <img src="data:image/png;base64,{img_b64}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.5); margin-bottom: 8px;">
-                <h4 style="margin: 0 0 10px 0; text-align: center; color: white; font-size: 1.1rem;">{nome}</h4>
+                <img src="data:image/png;base64,{img_b64}" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.5); margin-bottom: 8px;">
+                <h4 style="margin: 0 0 10px 0; text-align: center; color: white; font-size: 1.2rem;">{nome}</h4>
             </div>
             """, unsafe_allow_html=True
         )
@@ -94,7 +69,7 @@ def renderizar_avatar(caminho_imagem, emoji, nome):
             f"""
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
                 <div style="font-size: 60px; line-height: 1.2;">{emoji}</div>
-                <h4 style="margin: 0 0 10px 0; text-align: center; color: white; font-size: 1.1rem;">{nome}</h4>
+                <h4 style="margin: 0 0 10px 0; text-align: center; color: white; font-size: 1.2rem;">{nome}</h4>
             </div>
             """, unsafe_allow_html=True
         )
@@ -148,6 +123,9 @@ with aba1:
     with col1:
         renderizar_avatar("foto_ricardo.png", "👨🏻", "Ricardo")
         vit_ricardo = st.number_input("Ricardo", min_value=0, step=1, value=val_ricardo, key="input_ricardo", label_visibility="collapsed")
+        
+        # Espaço extra no telemóvel para não ficar colado no de baixo
+        st.markdown("<br>", unsafe_allow_html=True) 
         
     # --- Lado do Dinho ---
     with col2:
