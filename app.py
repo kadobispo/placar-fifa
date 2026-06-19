@@ -166,7 +166,7 @@ with aba1:
 # ==========================================
 with aba2:
     if not df.empty:
-        st.subheader("Quem manda na consola?")
+        st.subheader("Quem manda no Videogame?")
         
         vitorias_dias = df[df["Vencedor"] != "Empate"]["Vencedor"].value_counts()
         ricardo_dias = vitorias_dias.get("Ricardo", 0)
@@ -204,4 +204,4 @@ with aba2:
             st.dataframe(df, use_container_width=True, hide_index=True)
             
     else:
-        st.info("Ainda não há nada aqui. Liguem a consola!")
+        st.info("Ainda não há nada aqui. Liguem O Videogame!")
