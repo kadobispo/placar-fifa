@@ -3,14 +3,31 @@ import pandas as pd
 import os
 import base64
 import altair as alt
+import gspread # Biblioteca para o Google Planilhas
 from datetime import date
 
 # ==========================================
-# 1. CONFIGURAÇÃO INICIAL E ESTILOS (CSS)
+# 1. CONFIGURAÇÃO INICIAL E CONEXÃO GOOGLE
 # ==========================================
 st.set_page_config(page_title="Placar FIFA", page_icon="🎮", layout="centered")
 
-DATA_FILE = "historico_fifa.csv"
+# ⚠️ ATENÇÃO: Substitua o link abaixo pelo LINK DE EDIÇÃO da sua planilha do Google!
+# Certifique-se de que nas configurações de compartilhamento da planilha está como "Qualquer pessoa com o link pode editar"
+URL_DA_PLANILHA = "https://docs.google.com/spreadsheets/d/18xnRj6LmMJlik7zRqBuIiG0GHwWFF6x1ecL75LQEsUk/edit"
+
+# Função para conectar ao Google Sheets usando o link público de edição
+@st.cache_data(ttl=5) # Atualiza os dados a cada 5 segundos
+def load_data_from_google():
+    try:
+        # CONEXÃO PÚBLICA (Sem necessidade de arquivos JSON complexos)
+        url_csv = URL_DA_PLANILHA.replace("/edit", "/export?format=csv")
+        df_sheets = pd.read_csv(url_csv)
+        df_sheets["Data"] = df_sheets["Data"].astype(str)
+        return df_sheets
+    except:
+        return pd.DataFrame(columns=["Data", "Ricardo", "Dinho", "Vencedor"])
+
+df = load_data_from_google()
 
 # Função para converter a imagem em formato Base64
 def obter_base64_da_imagem(caminho_da_imagem):
@@ -52,7 +69,7 @@ if img_base64_fundo:
         unsafe_allow_html=True
     )
 
-# Função para desenhar os avatares (tamanho mantido como pediu)
+# Função para desenhar os avatares centralizados
 def renderizar_avatar(caminho_imagem, emoji, nome):
     img_b64 = obter_base64_da_imagem(caminho_imagem)
     if img_b64:
@@ -74,17 +91,6 @@ def renderizar_avatar(caminho_imagem, emoji, nome):
             """, unsafe_allow_html=True
         )
 
-# Função para carregar a base de dados
-def load_data():
-    if os.path.exists(DATA_FILE):
-        df_carregado = pd.read_csv(DATA_FILE)
-        df_carregado["Data"] = df_carregado["Data"].astype(str)
-        return df_carregado
-    else:
-        return pd.DataFrame(columns=["Data", "Ricardo", "Dinho", "Vencedor"])
-
-df = load_data()
-
 # ==========================================
 # 2. CABEÇALHO DA APLICAÇÃO
 # ==========================================
@@ -92,10 +98,10 @@ st.markdown("<h1 style='text-align: center;'>🎮 Confronto FIFA 🎮</h1>", uns
 st.markdown("<h3 style='text-align: center; color: #b0b0b0;'>Ricardo vs Dinho</h3>", unsafe_allow_html=True)
 st.divider()
 
-aba1, aba2 = st.tabs(["📝 Registar Placar", "📊 Resultados do Mês"])
+aba1, aba2 = st.tabs(["📝 Registrar Placar", "📊 Resultados do Mês"])
 
 # ==========================================
-# 3. ABA 1: REGISTAR / CONSULTAR PLACAR
+# 3. ABA 1: REGISTRAR / CONSULTAR PLACAR
 # ==========================================
 with aba1:
     st.subheader("Como foi o jogo hoje?")
@@ -112,11 +118,10 @@ with aba1:
     if not jogo_existente.empty:
         val_ricardo = int(jogo_existente.iloc[0]["Ricardo"])
         val_dinho = int(jogo_existente.iloc[0]["Dinho"])
-        vencedor_salvo = jogo_existente.iloc[0]["Vencedor"]
-        st.info(f"ℹ️ Já existe um jogo registado nesta data! Placar: **Ricardo {val_ricardo} x {val_dinho} Dinho**")
+        st.info(f"ℹ️ Já existe um jogo registrado nesta data! Placar: **Ricardo {val_ricardo} x {val_dinho} Dinho**")
         ja_existe_jogo = True
     
-    # Colunas
+    # Colunas (vão empilhar automaticamente no celular para ficar perfeito)
     col1, col2 = st.columns(2)
     
     # --- Lado do Ricardo ---
@@ -124,7 +129,7 @@ with aba1:
         renderizar_avatar("foto_ricardo.png", "👨🏻", "Ricardo")
         vit_ricardo = st.number_input("Ricardo", min_value=0, step=1, value=val_ricardo, key="input_ricardo", label_visibility="collapsed")
         
-        # Espaço extra no telemóvel para não ficar colado no de baixo
+        # Espaço extra no celular para não ficar colado no jogador de baixo
         st.markdown("<br>", unsafe_allow_html=True) 
         
     # --- Lado do Dinho ---
@@ -147,26 +152,35 @@ with aba1:
         else:
             vencedor = "Empate"
             
-        novo_dado = pd.DataFrame({
-            "Data": [data_selecionada_str],
-            "Ricardo": [vit_ricardo],
-            "Dinho": [vit_dinho],
-            "Vencedor": [vencedor]
-        })
-        
-        if ja_existe_jogo:
-            df = df[df["Data"] != data_selecionada_str]
+        # GRAVAÇÃO DIRETA NO GOOGLE PLANILHAS
+        try:
+            gc = gspread.public_link_client()
+            sh = gc.open_by_url(URL_DA_PLANILHA)
+            worksheet = sh.get_worksheet(0)
             
-        df = pd.concat([df, novo_dado], ignore_index=True)
-        df.to_csv(DATA_FILE, index=False)
-        st.success(f"Feito! Placar guardado com sucesso. Vencedor: **{vencedor}** 🏆")
+            if ja_existe_jogo:
+                # Se já existe, localiza a linha e atualiza
+                celula = worksheet.find(data_selecionada_str)
+                linha = celula.row
+                worksheet.update_cell(linha, 2, vit_ricardo)
+                worksheet.update_cell(linha, 3, vit_dinho)
+                worksheet.update_cell(linha, 4, vencedor)
+            else:
+                # Se é novo, adiciona uma linha no final
+                worksheet.append_row([data_selecionada_str, vit_ricardo, vit_dinho, vencedor])
+                
+            st.success(f"Feito! Gravado no Google Planilhas. Vencedor: **{vencedor}** 🏆")
+            st.cache_data.clear() # Força o app a reler a planilha atualizada
+            
+        except Exception as e:
+            st.error("Erro ao conectar ao Google Planilhas. Verifique se configurou para 'Qualquer pessoa com o link pode editar'.")
 
 # ==========================================
-# 4. ABA 2: VER QUEM ESTÁ A GANHAR NO MÊS
+# 4. ABA 2: VER QUEM ESTÁ GANHANDO NO MÊS
 # ==========================================
 with aba2:
     if not df.empty:
-        st.subheader("Quem manda no Videogame?")
+        st.subheader("Quem manda no videogame?")
         
         vitorias_dias = df[df["Vencedor"] != "Empate"]["Vencedor"].value_counts()
         ricardo_dias = vitorias_dias.get("Ricardo", 0)
@@ -204,4 +218,4 @@ with aba2:
             st.dataframe(df, use_container_width=True, hide_index=True)
             
     else:
-        st.info("Ainda não há nada aqui. Liguem O Videogame!")
+        st.info("Ainda não há nada aqui. Liguem o videogame!")
