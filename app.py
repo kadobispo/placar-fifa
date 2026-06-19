@@ -21,7 +21,7 @@ def obter_base64_da_imagem(caminho_da_imagem):
     except:
         return None
 
-# Aplica a imagem do campo de futebol no fundo e ESPREME a caixa de vitória
+# Aplica a imagem do campo de futebol no fundo
 img_base64_fundo = obter_base64_da_imagem("campo_futebol.jpg")
 if img_base64_fundo:
     st.markdown(
@@ -42,52 +42,24 @@ if img_base64_fundo:
             color: #ffffff !important;
         }}
         
-        /* Mágica padrão para as fotos */
-        img.avatar-img {{
-            width: 110px;
-            height: 110px;
-            border-radius: 50%;
-            border: 3px solid white;
-            object-fit: cover;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-            margin-bottom: 10px;
-        }}
-        
         /* ==========================================
-           MÁGICA PARA O CELULAR (Esmaga a caixa de números)
+           MÁGICA PARA O TELEMÓVEL (Garante o 50/50 exato)
            ========================================== */
         @media (max-width: 768px) {{
             div[data-testid="stHorizontalBlock"] {{
                 display: flex !important;
                 flex-direction: row !important;
                 flex-wrap: nowrap !important;
-                gap: 8px !important; 
-                padding: 0 5px !important;
-                overflow: hidden !important; /* Corta qualquer coisa que tentar vazar */
+                gap: 8px !important; /* Espaço reduzido ao máximo */
             }}
             div[data-testid="column"] {{
-                flex: 1 1 0% !important; /* O zero força a divisão 50/50 exata */
+                flex: 1 1 50% !important; 
                 width: 50% !important;
-                min-width: 0 !important; /* Permite espremer a coluna */
+                min-width: 0 !important;
             }}
-            
-            /* O VERDADEIRO VILÃO: A caixa de números e seus botões internos */
-            div[data-testid="stNumberInput"],
-            div[data-baseweb="input"],
-            div[data-baseweb="base-input"] {{
-                min-width: 0 !important; /* Remove a trava de tamanho mínimo da caixa */
-                width: 100% !important;
-            }}
-            
-            /* Diminui o texto das caixas para caber lado a lado sem quebrar */
-            label[data-testid="stWidgetLabel"] p {{
-                font-size: 13px !important;
-            }}
-            
-            /* Diminui a foto um pouco no celular para dar respiro na tela */
-            img.avatar-img {{
-                width: 80px !important;
-                height: 80px !important;
+            /* Diminui a margem interna dos botões no telemóvel */
+            div[data-testid="stNumberInput"] input {{
+                padding: 0 5px !important;
             }}
         }}
         </style>
@@ -95,15 +67,15 @@ if img_base64_fundo:
         unsafe_allow_html=True
     )
 
-# Função para desenhar o rosto de vocês e amarrar a classe "avatar-img"
+# Função para desenhar os avatares centralizados
 def renderizar_avatar(caminho_imagem, emoji, nome):
     img_b64 = obter_base64_da_imagem(caminho_imagem)
     if img_b64:
         st.markdown(
             f"""
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
-                <img class="avatar-img" src="data:image/png;base64,{img_b64}">
-                <h3 style="margin: 0; text-align: center; color: white;">{nome}</h3>
+                <img src="data:image/png;base64,{img_b64}" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.5); margin-bottom: 5px;">
+                <h3 style="margin: 0 0 10px 0; text-align: center; color: white;">{nome}</h3>
             </div>
             """, unsafe_allow_html=True
         )
@@ -112,7 +84,7 @@ def renderizar_avatar(caminho_imagem, emoji, nome):
             f"""
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
                 <div style="font-size: 80px; line-height: 1.2;">{emoji}</div>
-                <h3 style="margin: 0; text-align: center; color: white;">{nome}</h3>
+                <h3 style="margin: 0 0 10px 0; text-align: center; color: white;">{nome}</h3>
             </div>
             """, unsafe_allow_html=True
         )
@@ -135,10 +107,10 @@ st.markdown("<h1 style='text-align: center;'>🎮 Confronto FIFA 🎮</h1>", uns
 st.markdown("<h3 style='text-align: center; color: #b0b0b0;'>Ricardo vs Dinho</h3>", unsafe_allow_html=True)
 st.divider()
 
-aba1, aba2 = st.tabs(["📝 Registrar Placar", "📊 Resultados do Mês"])
+aba1, aba2 = st.tabs(["📝 Registar Placar", "📊 Resultados do Mês"])
 
 # ==========================================
-# 3. ABA 1: REGISTRAR / CONSULTAR PLACAR
+# 3. ABA 1: REGISTAR / CONSULTAR PLACAR
 # ==========================================
 with aba1:
     st.subheader("Como foi o jogo hoje?")
@@ -156,23 +128,21 @@ with aba1:
         val_ricardo = int(jogo_existente.iloc[0]["Ricardo"])
         val_dinho = int(jogo_existente.iloc[0]["Dinho"])
         vencedor_salvo = jogo_existente.iloc[0]["Vencedor"]
-        st.info(f"ℹ️ Já existe um jogo registrado nesta data! Placar: **Ricardo {val_ricardo} x {val_dinho} Dinho** (Vencedor: {vencedor_salvo})")
+        st.info(f"ℹ️ Já existe um jogo registado nesta data! Placar: **Ricardo {val_ricardo} x {val_dinho} Dinho** (Vencedor: {vencedor_salvo})")
         ja_existe_jogo = True
     
-    # Colunas limpas lado a lado
     col1, col2 = st.columns(2)
     
     # --- Lado do Ricardo ---
     with col1:
         renderizar_avatar("foto_ricardo.png", "👨🏻", "Ricardo")
-        st.write("") 
-        vit_ricardo = st.number_input("Suas Vitórias", min_value=0, step=1, value=val_ricardo, key="input_ricardo")
+        # O TRUQUE DE MESTRE: label_visibility="collapsed" remove o texto que forçava a largura
+        vit_ricardo = st.number_input("Ricardo", min_value=0, step=1, value=val_ricardo, key="input_ricardo", label_visibility="collapsed")
         
     # --- Lado do Dinho ---
     with col2:
         renderizar_avatar("foto_dinho.png", "👴🏼", "Dinho")
-        st.write("") 
-        vit_dinho = st.number_input("Vitórias dele", min_value=0, step=1, value=val_dinho, key="input_dinho")
+        vit_dinho = st.number_input("Dinho", min_value=0, step=1, value=val_dinho, key="input_dinho", label_visibility="collapsed")
 
     st.write("") 
     
@@ -200,14 +170,14 @@ with aba1:
             
         df = pd.concat([df, novo_dado], ignore_index=True)
         df.to_csv(DATA_FILE, index=False)
-        st.success(f"Feito! Placar gravado com sucesso. Vencedor: **{vencedor}** 🏆")
+        st.success(f"Feito! Placar guardado com sucesso. Vencedor: **{vencedor}** 🏆")
 
 # ==========================================
-# 4. ABA 2: VER QUEM ESTÁ GANHANDO NO MÊS
+# 4. ABA 2: VER QUEM ESTÁ A GANHAR NO MÊS
 # ==========================================
 with aba2:
     if not df.empty:
-        st.subheader("Quem manda no videogame?")
+        st.subheader("Quem manda na consola?")
         
         vitorias_dias = df[df["Vencedor"] != "Empate"]["Vencedor"].value_counts()
         ricardo_dias = vitorias_dias.get("Ricardo", 0)
@@ -245,4 +215,4 @@ with aba2:
             st.dataframe(df, use_container_width=True, hide_index=True)
             
     else:
-        st.info("Ainda não há nada aqui. Liguem o videogame!")
+        st.info("Ainda não há nada aqui. Liguem a consola!")
