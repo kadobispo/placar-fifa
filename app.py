@@ -12,7 +12,7 @@ st.set_page_config(page_title="Placar FIFA", page_icon="🎮", layout="centered"
 
 DATA_FILE = "historico_fifa.csv"
 
-# Função para converter a imagem em formato Base64 (agora usada para o fundo e para os avatares!)
+# Função para converter a imagem em formato Base64
 def obter_base64_da_imagem(caminho_da_imagem):
     try:
         with open(caminho_da_imagem, "rb") as f:
@@ -21,7 +21,7 @@ def obter_base64_da_imagem(caminho_da_imagem):
     except:
         return None
 
-# Aplica a imagem do campo de futebol no fundo e corrige as colunas do celular
+# Aplica a imagem do campo de futebol no fundo e FORÇA o 50/50 no celular
 img_base64_fundo = obter_base64_da_imagem("campo_futebol.jpg")
 if img_base64_fundo:
     st.markdown(
@@ -43,19 +43,26 @@ if img_base64_fundo:
         }}
         
         /* ==========================================
-           MÁGICA PARA O CELULAR (Força o lado a lado perfeito)
+           MÁGICA PARA O CELULAR (Trava o 50/50 exato)
            ========================================== */
         @media (max-width: 768px) {{
             div[data-testid="stHorizontalBlock"] {{
+                display: flex !important;
                 flex-direction: row !important;
                 flex-wrap: nowrap !important;
-                gap: 15px !important; /* Espaço exato entre você e o Dinho */
-                padding: 0 10px !important;
+                gap: 10px !important; /* Espaçamento seguro entre as duas colunas */
+                padding: 0 !important;
             }}
             div[data-testid="column"] {{
+                flex: 1 1 0px !important; /* A MAGIA: Força a divisão igual ignorando o tamanho da caixa */
                 width: 50% !important;
-                flex: 1 1 50% !important;
+                max-width: 50% !important;
                 min-width: 0 !important;
+            }}
+            /* Diminui a foto um pouco no celular para dar respiro na tela */
+            img.avatar-img {{
+                width: 85px !important;
+                height: 85px !important;
             }}
         }}
         </style>
@@ -63,21 +70,19 @@ if img_base64_fundo:
         unsafe_allow_html=True
     )
 
-# Função para desenhar o rosto de vocês perfeitamente centralizado em HTML
+# Função para desenhar o rosto de vocês e amarrar a classe "avatar-img"
 def renderizar_avatar(caminho_imagem, emoji, nome):
     img_b64 = obter_base64_da_imagem(caminho_imagem)
     if img_b64:
-        # Se achar a foto, desenha a imagem redonda
         st.markdown(
             f"""
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
-                <img src="data:image/png;base64,{img_b64}" style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.5); margin-bottom: 10px;">
+                <img class="avatar-img" src="data:image/png;base64,{img_b64}" style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.5); margin-bottom: 10px;">
                 <h3 style="margin: 0; text-align: center; color: white;">{nome}</h3>
             </div>
             """, unsafe_allow_html=True
         )
     else:
-        # Se não achar a foto, desenha o emoji
         st.markdown(
             f"""
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
@@ -129,19 +134,19 @@ with aba1:
         st.info(f"ℹ️ Já existe um jogo registrado nesta data! Placar: **Ricardo {val_ricardo} x {val_dinho} Dinho** (Vencedor: {vencedor_salvo})")
         ja_existe_jogo = True
     
-    # Criamos apenas as duas colunas limpas
+    # Criamos apenas as duas colunas
     col1, col2 = st.columns(2)
     
     # --- Lado do Ricardo ---
     with col1:
         renderizar_avatar("foto_ricardo.png", "👨🏻", "Ricardo")
-        st.write("") # Espaço extra
+        st.write("") 
         vit_ricardo = st.number_input("Suas Vitórias", min_value=0, step=1, value=val_ricardo, key="input_ricardo")
         
     # --- Lado do Dinho ---
     with col2:
         renderizar_avatar("foto_dinho.png", "👴🏼", "Dinho")
-        st.write("") # Espaço extra
+        st.write("") 
         vit_dinho = st.number_input("Vitórias dele", min_value=0, step=1, value=val_dinho, key="input_dinho")
 
     st.write("") 
