@@ -45,34 +45,42 @@ if os.path.exists("campo_futebol.jpg"):
         div[data-testid="stImage"] {{
             display: flex;
             justify-content: center;
+            width: 100%;
         }}
         div[data-testid="stImage"] img {{
-            max-width: 140px !important; /* Tamanho perfeito para a tela */
-            border-radius: 50% !important; /* Deixa a foto perfeitamente redonda */
-            border: 3px solid #ffffff; /* Borda branca para destacar no fundo escuro */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5); /* Sombra para dar profundidade */
+            max-width: 140px !important; 
+            border-radius: 50% !important; 
+            border: 3px solid #ffffff; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5); 
         }}
 
         /* ==========================================
-           MÁGICA PARA O CELULAR (Impede de estourar)
+           MÁGICA PARA O CELULAR (Impede de empurrar para o lado)
            ========================================== */
         @media (max-width: 768px) {{
             div[data-testid="stHorizontalBlock"] {{
                 flex-direction: row !important;
                 flex-wrap: nowrap !important;
+                gap: 0px !important; /* Tira o espaço extra que empurrava o Dinho */
+                justify-content: space-evenly !important;
             }}
             div[data-testid="column"] {{
-                width: 50% !important;
-                flex: 1 1 50% !important;
-                min-width: 50% !important;
+                width: 48% !important; /* Deixa um respiro de segurança */
+                flex: 1 1 48% !important;
+                min-width: 0 !important; /* Permite encolher sem vazar a tela */
                 padding: 0 5px !important;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }}
             h3 {{
                 font-size: 1.1rem !important;
+                text-align: center !important;
+                width: 100%;
             }}
-            /* No celular, a foto fica um pouquinho menor para caber perfeito */
+            /* A foto fica um pouquinho menor para caber perfeito lado a lado */
             div[data-testid="stImage"] img {{
-                max-width: 100px !important; 
+                max-width: 90px !important; 
             }}
         }}
         </style>
@@ -133,7 +141,6 @@ with aba1:
     
     # --- Lado do Ricardo ---
     with col1:
-        # Repare que retiramos as subcolunas, o CSS agora centraliza sozinho!
         foto_ricardo = obter_foto_padronizada("foto_ricardo.png")
         if foto_ricardo:
             st.image(foto_ricardo, use_container_width=True)
