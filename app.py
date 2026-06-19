@@ -43,39 +43,49 @@ if img_base64_fundo:
         }}
         
         /* ==========================================
-           MÁGICA PARA O TELEMÓVEL (Garante o 50/50 exato)
+           A OPÇÃO NUCLEAR PARA O TELEMÓVEL (CSS com Especificidade Máxima)
            ========================================== */
-        @media (max-width: 768px) {{
-            div[data-testid="stHorizontalBlock"] {{
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
-                gap: 8px !important; /* Espaço reduzido ao máximo */
-            }}
-            div[data-testid="column"] {{
-                flex: 1 1 50% !important; 
-                width: 50% !important;
-                min-width: 0 !important;
-            }}
-            /* Diminui a margem interna dos botões no telemóvel */
-            div[data-testid="stNumberInput"] input {{
-                padding: 0 5px !important;
-            }}
+        html body div[data-testid="stHorizontalBlock"] {{
+            display: flex !important;
+            flex-direction: row !important; /* FORÇA LADO A LADO */
+            flex-wrap: nowrap !important;   /* PROÍBE EMPILHAR */
+            gap: 15px !important;           /* ESPAÇO NO MEIO */
+            padding: 0 5px !important;
+        }}
+        
+        html body div[data-testid="column"] {{
+            width: 50% !important;          /* 50% EXATO PARA CADA UM */
+            flex: 1 1 50% !important;
+            min-width: 0 !important;        /* PERMITE ENCOLHER */
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+        }}
+        
+        /* Força a caixa de números a caber nos 50% */
+        html body div[data-testid="stNumberInput"] {{
+            min-width: 0 !important;
+            width: 100% !important;
+        }}
+        
+        /* Ajuste fino dos botões de - e + para não ficarem escondidos */
+        html body div[data-baseweb="input"] {{
+            font-size: 14px !important;
         }}
         </style>
         """,
         unsafe_allow_html=True
     )
 
-# Função para desenhar os avatares centralizados
+# Função para desenhar os avatares (tamanho ajustado para caber perfeito no telemóvel)
 def renderizar_avatar(caminho_imagem, emoji, nome):
     img_b64 = obter_base64_da_imagem(caminho_imagem)
     if img_b64:
         st.markdown(
             f"""
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
-                <img src="data:image/png;base64,{img_b64}" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.5); margin-bottom: 5px;">
-                <h3 style="margin: 0 0 10px 0; text-align: center; color: white;">{nome}</h3>
+                <img src="data:image/png;base64,{img_b64}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.5); margin-bottom: 8px;">
+                <h4 style="margin: 0 0 10px 0; text-align: center; color: white; font-size: 1.1rem;">{nome}</h4>
             </div>
             """, unsafe_allow_html=True
         )
@@ -83,8 +93,8 @@ def renderizar_avatar(caminho_imagem, emoji, nome):
         st.markdown(
             f"""
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
-                <div style="font-size: 80px; line-height: 1.2;">{emoji}</div>
-                <h3 style="margin: 0 0 10px 0; text-align: center; color: white;">{nome}</h3>
+                <div style="font-size: 60px; line-height: 1.2;">{emoji}</div>
+                <h4 style="margin: 0 0 10px 0; text-align: center; color: white; font-size: 1.1rem;">{nome}</h4>
             </div>
             """, unsafe_allow_html=True
         )
@@ -128,15 +138,15 @@ with aba1:
         val_ricardo = int(jogo_existente.iloc[0]["Ricardo"])
         val_dinho = int(jogo_existente.iloc[0]["Dinho"])
         vencedor_salvo = jogo_existente.iloc[0]["Vencedor"]
-        st.info(f"ℹ️ Já existe um jogo registado nesta data! Placar: **Ricardo {val_ricardo} x {val_dinho} Dinho** (Vencedor: {vencedor_salvo})")
+        st.info(f"ℹ️ Já existe um jogo registado nesta data! Placar: **Ricardo {val_ricardo} x {val_dinho} Dinho**")
         ja_existe_jogo = True
     
+    # Colunas
     col1, col2 = st.columns(2)
     
     # --- Lado do Ricardo ---
     with col1:
         renderizar_avatar("foto_ricardo.png", "👨🏻", "Ricardo")
-        # O TRUQUE DE MESTRE: label_visibility="collapsed" remove o texto que forçava a largura
         vit_ricardo = st.number_input("Ricardo", min_value=0, step=1, value=val_ricardo, key="input_ricardo", label_visibility="collapsed")
         
     # --- Lado do Dinho ---
@@ -144,6 +154,7 @@ with aba1:
         renderizar_avatar("foto_dinho.png", "👴🏼", "Dinho")
         vit_dinho = st.number_input("Dinho", min_value=0, step=1, value=val_dinho, key="input_dinho", label_visibility="collapsed")
 
+    st.write("") 
     st.write("") 
     
     texto_botao = "🔄 Atualizar Resultado do Dia" if ja_existe_jogo else "💾 Gravar Resultado de Hoje"
